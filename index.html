@@ -1510,10 +1510,13 @@ border-radius: 0px;
 <h2><span class="header-section-number">2.1</span> ASTRAL Output Format</h2>
 <p>ASTRAL provides more than just tree topology—it includes quartet support values for each internal node that quantify gene tree conflict patterns. The standard ASTRAL output format includes:</p>
 <pre><code>Node_support = q1; q2; q3</code></pre>
-<p>Where:
-- <strong>q1</strong> = proportion of gene trees supporting the species tree topology
-- <strong>q2</strong> = proportion supporting the first alternative topology<br />
-- <strong>q3</strong> = proportion supporting the second alternative topology</p>
+<p>Where:</p>
+<ul>
+<li><strong>q1</strong> = proportion of gene trees supporting the species tree topology</li>
+<li><strong>q2</strong> = proportion supporting the first alternative topology<br />
+</li>
+<li><strong>q3</strong> = proportion supporting the second alternative topology</li>
+</ul>
 </div>
 <div id="example-astral-output" class="section level2" number="2.2">
 <h2><span class="header-section-number">2.2</span> Example ASTRAL Output</h2>
@@ -1533,9 +1536,9 @@ border-radius: 0px;
 </div>
 <div id="statistical-test-setup" class="section level1" number="3">
 <h1><span class="header-section-number">3</span> Statistical Test Setup</h1>
-<div id="χ²-test-framework" class="section level2" number="3.1">
-<h2><span class="header-section-number">3.1</span> χ² Test Framework</h2>
-<p>Phytop employs a χ² goodness-of-fit test to distinguish between ILS and hybridization based on the symmetry of gene tree discordance patterns.</p>
+<div id="chi2-test-framework" class="section level2" number="3.1">
+<h2><span class="header-section-number">3.1</span> <span class="math inline">\(\chi^2\)</span> Test Framework</h2>
+<p>Phytop employs a <span class="math inline">\(\chi^2\)</span> goodness-of-fit test to distinguish between ILS and hybridization based on the symmetry of gene tree discordance patterns.</p>
 <p>We are detailing below the approach applied by Phytop:</p>
 <div id="step-1-extract-quartet-frequencies" class="section level3" number="3.1.1">
 <h3><span class="header-section-number">3.1.1</span> Step 1: Extract Quartet Frequencies</h3>
@@ -1555,8 +1558,8 @@ border-radius: 0px;
 <li><strong>H₁ (Alternative)</strong>: q2 ≠ q3 (asymmetric discordance suggesting hybridization)</li>
 </ul>
 </div>
-<div id="step-4-calculate-χ²-statistic" class="section level3" number="3.1.4">
-<h3><span class="header-section-number">3.1.4</span> Step 4: Calculate χ² Statistic</h3>
+<div id="step-4-calculate-chi2-statistic" class="section level3" number="3.1.4">
+<h3><span class="header-section-number">3.1.4</span> Step 4: Calculate <span class="math inline">\(\chi^2\)</span> Statistic</h3>
 <pre><code>Expected (E) frequencies under H₀:
 E₂ = E₃ = (Count₂ + Count₃) / 2
 
@@ -1567,7 +1570,7 @@ O₂ = Count₂, O₃ = Count₃
 </div>
 <div id="step-5-determine-statistical-significance" class="section level3" number="3.1.5">
 <h3><span class="header-section-number">3.1.5</span> Step 5: Determine Statistical Significance</h3>
-<p>The χ² statistic is compared to a χ² distribution with 1 degree of freedom to obtain the p-value.</p>
+<p>The <span class="math inline">\(\chi^2\)</span> statistic is compared to a χ² distribution with 1 degree of freedom to obtain the p-value.</p>
 </div>
 </div>
 <div id="theoretical-expectations" class="section level2" number="3.2">
@@ -1673,9 +1676,11 @@ O₂ = Count₂, O₃ = Count₃
 </div>
 <div id="worked-example-node-n6" class="section level2" number="5.3">
 <h2><span class="header-section-number">5.3</span> Worked Example: Node N6</h2>
-<p><strong>Input data:</strong>
-- n = 319.6 gene trees
-- q1 = 0.560, q2 = 0.143, q3 = 0.296</p>
+<p><strong>Input data:</strong></p>
+<ul>
+<li>n = 319.6 gene trees</li>
+<li>q1 = 0.560, q2 = 0.143, q3 = 0.296</li>
+</ul>
 <p><strong>Calculations:</strong></p>
 <pre><code>Count₂ = 319.6 × 0.143 = 45.7
 Count₃ = 319.6 × 0.296 = 94.6
@@ -1816,7 +1821,7 @@ N52 298.2863857 0.969428194 0.356483041 0.322648542 0.320868417 0.643516959 0   
 </div>
 <div id="conclusion" class="section level1" number="6">
 <h1><span class="header-section-number">6</span> Conclusion</h1>
-<p>Phytop’s χ² test framework transforms ASTRAL’s quartet support statistics into a powerful tool for evolutionary inference. By testing the symmetry of alternative topology frequencies, it efficiently distinguishes between coalescent stochasticity (ILS) and reticulate evolution (hybridization) without requiring additional computational analysis of gene trees. This approach demonstrates how existing phylogenomic outputs can be repurposed for novel evolutionary insights through appropriate statistical frameworks, providing researchers with an accessible and efficient method for detecting and quantifying evolutionary conflict in large-scale phylogenomic datasets.</p>
+<p>Phytop’s <span class="math inline">\(\chi^2\)</span> test framework transforms ASTRAL’s quartet support statistics into a powerful tool for evolutionary inference. By testing the symmetry of alternative topology frequencies, it efficiently distinguishes between coalescent stochasticity (ILS) and reticulate evolution (hybridization) without requiring additional computational analysis of gene trees. This approach demonstrates how existing phylogenomic outputs can be repurposed for novel evolutionary insights through appropriate statistical frameworks, providing researchers with an accessible and efficient method for detecting and quantifying evolutionary conflict in large-scale phylogenomic datasets.</p>
 <hr />
 </div>
 <div id="references" class="section level1 unnumbered">

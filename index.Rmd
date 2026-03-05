@@ -4,12 +4,12 @@ subtitle: "Phytop: A Comprehensive Guide to Detecting Incomplete Lineage Sorting
 author: "Sven Buerki - Boise State University"
 date: "`r Sys.Date()`"
 output:
+  bookdown::pdf_document2:
+    toc: TRUE
   bookdown::html_document2: 
     toc: TRUE
     toc_float: TRUE
     self_contained: TRUE
-  bookdown::pdf_document2:
-    toc: TRUE
 link-citations: yes
 fontsize: 12pt
 urlcolor: blue
@@ -43,6 +43,7 @@ Node_support = q1; q2; q3
 ```
 
 Where:
+
 - **q1** = proportion of gene trees supporting the species tree topology
 - **q2** = proportion supporting the first alternative topology  
 - **q3** = proportion supporting the second alternative topology
@@ -67,9 +68,9 @@ These proportions reflect the evolutionary processes shaping gene tree variation
 
 # Statistical Test Setup
 
-## χ² Test Framework
+## $\chi^2$ Test Framework
 
-Phytop employs a χ² goodness-of-fit test to distinguish between ILS and hybridization based on the symmetry of gene tree discordance patterns. 
+Phytop employs a $\chi^2$ goodness-of-fit test to distinguish between ILS and hybridization based on the symmetry of gene tree discordance patterns. 
 
 We are detailing below the approach applied by Phytop:
 
@@ -89,7 +90,7 @@ For **n** total gene trees analyzed by ASTRAL:
 - **H₀ (Null)**: q2 = q3 (symmetric discordance consistent with ILS alone)
 - **H₁ (Alternative)**: q2 ≠ q3 (asymmetric discordance suggesting hybridization)
 
-### Step 4: Calculate χ² Statistic
+### Step 4: Calculate $\chi^2$ Statistic
 
 ```
 Expected (E) frequencies under H₀:
@@ -103,7 +104,7 @@ O₂ = Count₂, O₃ = Count₃
 
 ### Step 5: Determine Statistical Significance
 
-The χ² statistic is compared to a χ² distribution with 1 degree of freedom to obtain the p-value.
+The $\chi^2$ statistic is compared to a χ² distribution with 1 degree of freedom to obtain the p-value.
 
 ## Theoretical Expectations
 
@@ -200,10 +201,12 @@ The Balanops dataset contains 47 nodes with gene tree topology frequencies analy
 ## Worked Example: Node N6
 
 **Input data:**
+
 - n = 319.6 gene trees
 - q1 = 0.560, q2 = 0.143, q3 = 0.296
 
 **Calculations:**
+
 ```
 Count₂ = 319.6 × 0.143 = 45.7
 Count₃ = 319.6 × 0.296 = 94.6
@@ -340,7 +343,7 @@ N52	298.2863857	0.969428194	0.356483041	0.322648542	0.320868417	0.643516959	0	0.
 
 # Conclusion
 
-Phytop's χ² test framework transforms ASTRAL's quartet support statistics into a powerful tool for evolutionary inference. By testing the symmetry of alternative topology frequencies, it efficiently distinguishes between coalescent stochasticity (ILS) and reticulate evolution (hybridization) without requiring additional computational analysis of gene trees. This approach demonstrates how existing phylogenomic outputs can be repurposed for novel evolutionary insights through appropriate statistical frameworks, providing researchers with an accessible and efficient method for detecting and quantifying evolutionary conflict in large-scale phylogenomic datasets.
+Phytop's $\chi^2$ test framework transforms ASTRAL's quartet support statistics into a powerful tool for evolutionary inference. By testing the symmetry of alternative topology frequencies, it efficiently distinguishes between coalescent stochasticity (ILS) and reticulate evolution (hybridization) without requiring additional computational analysis of gene trees. This approach demonstrates how existing phylogenomic outputs can be repurposed for novel evolutionary insights through appropriate statistical frameworks, providing researchers with an accessible and efficient method for detecting and quantifying evolutionary conflict in large-scale phylogenomic datasets.
 
 ---
 
