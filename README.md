@@ -6,9 +6,20 @@ A comprehensive guide for interpreting incomplete lineage sorting (ILS) and hybr
 
 This repository contains documentation and resources for analyzing gene tree discordance patterns using Phytop, a tool that distinguishes between incomplete lineage sorting and hybridization/introgression in phylogenomic datasets.
 
+## Author
+
+**Sven Buerki, Ph.D.** (he/him)  
+Associate Professor  
+Dr. Christopher Davidson Endowed Chair in Botany  
+Department of Biological Sciences  
+Boise State University  
+Boise, Idaho, USA  
+
+📧 [svenbuerki@boisestate.edu](mailto:svenbuerki@boisestate.edu)
+
 ## Documentation
 
-📖 **[Complete Analysis Guide](https://github.com/svenbuerki/Gene_conflict_Phytop.git)**
+📖 **[Complete Analysis Guide](https://svenbuerki.github.io/Gene_conflict_Phytop/)**
 
 Our comprehensive guide covers:
 
@@ -56,8 +67,8 @@ If you use this guide in your research, please cite:
 ```bibtex
 @misc{phytop_guide2024,
   title={Phytop Analysis Guide: Interpreting Incomplete Lineage Sorting and Hybridization in Phylogenomic Data},
-  author={[Your Name]},
-  year={2024},
-  url={https://github.com/yourusername/repository-name},
+  author={Sven Buerki},
+  year={2026},
+  url={https://github.com/svenbuerki/Gene_conflict_Phytop},
   note={GitHub repository}
 }

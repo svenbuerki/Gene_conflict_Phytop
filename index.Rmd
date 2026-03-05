@@ -4,12 +4,12 @@ subtitle: "Phytop: A Comprehensive Guide to Detecting Incomplete Lineage Sorting
 author: "Sven Buerki - Boise State University"
 date: "`r Sys.Date()`"
 output:
-  bookdown::pdf_document2:
-    toc: TRUE
   bookdown::html_document2: 
     toc: TRUE
     toc_float: TRUE
     self_contained: TRUE
+  bookdown::pdf_document2:
+    toc: TRUE
 link-citations: yes
 fontsize: 12pt
 urlcolor: blue
@@ -81,6 +81,7 @@ Phytop parses the ASTRAL tree file and extracts q1, q2, q3 values for each inter
 ### Step 2: Convert to Gene Tree Counts
 
 For **n** total gene trees analyzed by ASTRAL:
+
 - Count₁ = n × q1 (trees supporting species tree)
 - Count₂ = n × q2 (trees supporting first alternative)
 - Count₃ = n × q3 (trees supporting second alternative)
