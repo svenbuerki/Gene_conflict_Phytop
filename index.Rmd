@@ -1,0 +1,348 @@
+---
+title: "Gene conflict analysis"
+subtitle: "Phytop: A Comprehensive Guide to Detecting Incomplete Lineage Sorting and Hybridization in Phylogenomic Data"
+author: "Sven Buerki - Boise State University"
+date: "`r Sys.Date()`"
+output:
+  bookdown::html_document2: 
+    toc: TRUE
+    toc_float: TRUE
+    self_contained: TRUE
+  bookdown::pdf_document2:
+    toc: TRUE
+link-citations: yes
+fontsize: 12pt
+urlcolor: blue
+csl: AmJBot.csl
+bibliography: references.bib
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+# Introduction
+
+Gene tree discordance—where individual gene trees differ from each other and from the species tree—is a pervasive phenomenon in phylogenomic datasets that can obscure our understanding of evolutionary relationships. This discordance arises from multiple biological processes, most commonly incomplete lineage sorting (ILS) due to ancestral polymorphism, and hybridization/introgression events between lineages. The increasing availability of phylogenomic data has revealed that such discordance is widespread across the tree of life [e.g., @zuntini2024phylogenomics]. While some discordance reflects incomplete lineage sorting due to ancestral polymorphism, other patterns may indicate hybridization, introgression, or other reticulate processes [@soltis2009role].
+
+Distinguishing between these mechanisms is crucial for accurate phylogenetic inference, as they have fundamentally different evolutionary implications: ILS reflects stochastic coalescent processes within ancestral populations, while hybridization indicates reticulate evolution and horizontal gene flow. This distinction has important consequences for understanding speciation processes, biogeography, and comparative genomics, yet determining the relative contributions of these processes remains a significant analytical challenge.
+
+This document investigates the statistical frameworks available for diagnosing the sources of gene tree conflict in coalescence-based analyses. Specifically, we focus on Phytop [@zhang2024phytop], a computational tool that quantifies incomplete lineage sorting (ILS) and introgression/hybridization (IH) signals in species trees inferred by ASTRAL [@zhang2018astral]. This tool [@zhang2024phytop_software] addresses the critical challenge of distinguishing between gene tree discordance caused by coalescent stochasticity versus reticulate evolutionary processes. By leveraging quartet support statistics already computed by ASTRAL, Phytop provides rapid, statistically rigorous assessment of evolutionary conflict patterns across phylogenomic datasets, enabling researchers to determine whether observed gene tree discordance patterns are consistent with ILS alone, hybridization/introgression, or a combination of both processes.
+
+Phytop serves as an particularly efficient screening tool in phylogenomic pipelines due to several key computational advantages: it requires no gene tree re-analysis (using pre-computed ASTRAL statistics), enables rapid processing of large phylogenies, operates with a single input file containing all necessary information, and generates hypotheses for subsequent detailed network inference. This approach maximizes analytical efficiency while maintaining statistical rigor, enabling researchers to prioritize computationally intensive analyses on the most promising candidates for reticulate evolution rather than applying resource-heavy methods across entire datasets.
+
+# Input Data and ASTRAL Integration
+
+Phytop uses an ASTRAL-III output tree as the sole input for its analyses, making it essential to understand the key features of ASTRAL's output format and the information it provides.
+
+## ASTRAL Output Format
+
+ASTRAL provides more than just tree topology—it includes quartet support values for each internal node that quantify gene tree conflict patterns. The standard ASTRAL output format includes:
+
+```
+Node_support = q1; q2; q3
+```
+
+Where:
+- **q1** = proportion of gene trees supporting the species tree topology
+- **q2** = proportion supporting the first alternative topology  
+- **q3** = proportion supporting the second alternative topology
+
+## Example ASTRAL Output
+
+```newick
+((A,B),C):1.0[q1=0.6;q2=0.2;q3=0.2]:0.1
+```
+
+This notation indicates that 60% of gene trees support the species tree topology `((A,B),C)`, while 20% support each alternative arrangement: `((A,C),B)` and `((B,C),A)`.
+
+## Gene Tree Topology Patterns
+
+For any three-taxon subtree with taxa L (left child), R (right child), and S (sister group), three possible gene tree topologies exist:
+
+- **q1: ((L,R),S)** - matches species tree topology (concordant)
+- **q2: ((L,S),R)** - first alternative/discordant topology
+- **q3: ((S,R),L)** - second alternative/discordant topology
+
+These proportions reflect the evolutionary processes shaping gene tree variation and form the basis for Phytop's statistical framework.
+
+# Statistical Test Setup
+
+## χ² Test Framework
+
+Phytop employs a χ² goodness-of-fit test to distinguish between ILS and hybridization based on the symmetry of gene tree discordance patterns. 
+
+We are detailing below the approach applied by Phytop:
+
+### Step 1: Extract Quartet Frequencies
+
+Phytop parses the ASTRAL tree file and extracts q1, q2, q3 values for each internal node.
+
+### Step 2: Convert to Gene Tree Counts
+
+For **n** total gene trees analyzed by ASTRAL:
+- Count₁ = n × q1 (trees supporting species tree)
+- Count₂ = n × q2 (trees supporting first alternative)
+- Count₃ = n × q3 (trees supporting second alternative)
+
+### Step 3: Formulate Statistical Hypothesis
+
+- **H₀ (Null)**: q2 = q3 (symmetric discordance consistent with ILS alone)
+- **H₁ (Alternative)**: q2 ≠ q3 (asymmetric discordance suggesting hybridization)
+
+### Step 4: Calculate χ² Statistic
+
+```
+Expected (E) frequencies under H₀:
+E₂ = E₃ = (Count₂ + Count₃) / 2
+
+Observed (O) frequencies:
+O₂ = Count₂, O₃ = Count₃
+
+χ² = (O₂ - E₂)² / E₂ + (O₃ - E₃)² / E₃
+```
+
+### Step 5: Determine Statistical Significance
+
+The χ² statistic is compared to a χ² distribution with 1 degree of freedom to obtain the p-value.
+
+## Theoretical Expectations
+
+**Incomplete Lineage Sorting (ILS-only)**:
+
+- Creates symmetric discordance: q2 ≈ q3
+- Reflects random coalescent processes in ancestral populations
+- Maximum ILS (100%) produces q1 = q2 = q3 = 33.3%
+
+**Hybridization/Introgression (IH)**:
+
+- Creates asymmetric discordance: q2 ≠ q3
+- Direction of asymmetry indicates gene flow direction
+- Maximum IH (50%) produces q1 = q2 = 50%, q3 = 0%
+
+# Results Interpretation
+
+This section provides guidance on how to interpret Phytop output, focusing on the statistical significance of results and their biological implications for distinguishing between incomplete lineage sorting and hybridization/introgression.
+
+## Statistical Significance Thresholds
+
+**Statistically Significant (p < 0.05)**:
+
+- Reject null hypothesis of ILS-only explanation
+- Evidence for hybridization/introgression
+- IH_index values are biologically meaningful
+- Asymmetric gene tree discordance patterns
+
+**Non-significant (p ≥ 0.05)**:
+
+- Fail to reject null hypothesis
+- Gene tree discordance consistent with ILS alone
+- No significant evidence for hybridization
+- IH_index values should be treated as statistical noise (effectively zero)
+
+## Recommended Manuscript Language
+
+**For significant nodes (p < 0.05)**:
+
+> "Node X shows statistically significant asymmetric gene tree discordance (p < 0.05), suggesting hybridization/introgression with an estimated IH index of Y%."
+
+**For non-significant nodes (p ≥ 0.05)**:
+
+> "Gene tree discordance at node X is consistent with incomplete lineage sorting alone, with no significant evidence of hybridization/introgression (p > 0.05)."
+
+## Determining Gene Flow Directionality
+
+To interpret the direction of gene flow, researchers must identify the taxonomic relationships at each node:
+
+**If q2 > q3**:
+
+- Suggests gene flow: S → L or L ← S
+- The ((L,S),R) topology is more frequent than ((S,R),L)
+
+**If q3 > q2**:
+
+- Suggests gene flow: S → R or R ← S  
+- The ((S,R),L) topology is more frequent than ((L,S),R)
+
+## Important Considerations
+
+1. **Detection Limitations**: High ILS levels can mask hybridization signals, reducing detection power [@zhang2024phytop]
+2. **Multiple Testing**: Consider applying multiple testing corrections when analyzing many nodes simultaneously [@benjamini1995controlling]
+3. **Biological Context**: Integrate statistical results with biological plausibility (geographic overlap, temporal feasibility, ecological compatibility)
+
+## Method Limitations and Validation
+
+**Known Limitations**:
+
+- Reduced sensitivity at high ILS levels (>80%) [@zhang2024phytop]
+- False signals possible with low recombination rates under high ILS
+- Complex reticulation may produce significant signals at multiple nodes requiring network-based follow-up
+
+**Recommended Validation Approaches**:
+
+For nodes with significant IH signals:
+
+1. D-statistics/ABBA-BABA tests [@malinsky2021dsuite]
+2. Phylogenetic network inference [@wen2018inferring]
+3. Full-likelihood methods for detailed scenarios [@flouri2020bayesian]
+
+# Case Study: Balanops Dataset Analysis
+
+## Dataset Overview
+
+The Balanops dataset contains 47 nodes with gene tree topology frequencies analyzed using Phytop. This analysis provides insights into the evolutionary history of this plant group and demonstrates the practical application of Phytop in phylogenomic research.
+
+## Statistical Summary
+
+- **Total nodes analyzed**: 47
+- **Nodes with significant IH signals (p < 0.05)**: 3 (6.4%)
+- **Nodes consistent with ILS-only (p ≥ 0.05)**: 44 (93.6%)
+
+## Worked Example: Node N6
+
+**Input data:**
+- n = 319.6 gene trees
+- q1 = 0.560, q2 = 0.143, q3 = 0.296
+
+**Calculations:**
+```
+Count₂ = 319.6 × 0.143 = 45.7
+Count₃ = 319.6 × 0.296 = 94.6
+
+Expected under H₀: E₂ = E₃ = (45.7 + 94.6)/2 = 70.15
+
+χ² = (45.7-70.15)²/70.15 + (94.6-70.15)²/70.15 = 17.2
+
+p-value = 3.84 × 10⁻⁵
+```
+
+**Result**: Significant asymmetry (p < 0.05) suggests hybridization/introgression.
+
+## Significant Hybridization/Introgression Events
+
+### Node N6 (p = 3.84 × 10⁻⁵)
+
+- **IH index**: 26.8%
+- **ILS index**: 43.0%
+- **Pattern**: q3 > q2 (29.6% vs 14.3%)
+- **Interpretation**: Strong evidence for moderate introgression with mixed ILS/IH signal
+
+### Node N17 (p = 3.37 × 10⁻⁴)
+
+- **IH index**: 23.4%
+- **ILS index**: 44.4%
+- **Pattern**: q3 > q2 (27.8% vs 14.8%)
+- **Interpretation**: Strong evidence for moderate introgression, similar pattern to N6
+
+### Node N48 (p = 3.50 × 10⁻³)
+
+- **IH index**: 24.0%
+- **ILS index**: 52.7%
+- **Pattern**: q2 > q3 (28.9% vs 17.6%)
+- **Interpretation**: Moderate evidence for introgression in context of high ILS, opposite pattern from N6/N17
+
+## Evolutionary Implications
+
+**Predominantly Tree-like Evolution**: The low proportion of significant hybridization signals (6.4%) suggests that Balanops evolution has been largely tree-like, with limited reticulation events. This pattern contrasts with groups known for extensive hybridization [see this review @soltis2009role].
+
+**Localized Reticulation Events**: The three significant nodes suggest that hybridization/introgression has occurred but is restricted to specific lineages rather than being a pervasive evolutionary force throughout the group.
+
+**High ILS Background**: Many nodes show high ILS indices (>40%), indicating substantial ancestral polymorphism. This is consistent with rapid diversification or large ancestral effective population sizes [@degnan2009gene].
+
+## Manuscript Language for Balanops Results
+
+**Overall pattern**:
+
+> "Phytop analysis of 47 nodes in the Balanops phylogeny revealed a predominantly tree-like evolutionary history, with only three nodes (6.4%) showing statistically significant evidence of hybridization/introgression (p < 0.05). The remaining 44 nodes showed gene tree discordance patterns consistent with incomplete lineage sorting alone."
+
+**Specific findings**:
+
+> "Three nodes (N6, N17, N48) exhibited significant asymmetric gene tree discordance (p < 0.004), with IH indices ranging from 23.4% to 26.8%, suggesting moderate levels of introgression. These signals occurred against a background of substantial incomplete lineage sorting (ILS indices 43.0-52.7%), indicating complex evolutionary dynamics involving both coalescent stochasticity and reticulate evolution."
+
+## Workflow Integration and Best Practices
+
+### Analysis Framework
+
+**Step 1: Initial Screening**
+
+- Identify nodes with p < 0.05 as candidates for hybridization
+- Calculate proportion of significant nodes in dataset
+- Assess overall pattern (tree-like vs. reticulate evolution)
+
+**Step 2: Biological Assessment**
+
+- Evaluate biological plausibility of significant signals
+- Consider temporal and geographic constraints
+- Assess consistency with previous studies
+
+**Step 3: Follow-up Validation**
+
+- Apply complementary methods to significant nodes
+- Use network-based approaches for complex patterns
+- Integrate multiple lines of evidence
+
+## Example Dataset
+
+The complete Balanops dataset analyzed in this guide is provided below:
+
+```tsv
+node	n	p_value	q1	q2	q3	ILS_explain	IH_explain	ILS_index	IH_index
+N6	319.6236457	3.84E-05	0.560441033	0.143445584	0.296113383	0.286891168	0.152667799	0.430336752	0.267996574
+N17	323.6529266	0.000337732	0.573747743	0.148084484	0.278167773	0.296168969	0.130083289	0.444253453	0.23406945
+N48	308.2251212	0.003498048	0.534913673	0.289260475	0.175825852	0.351651704	0.113434623	0.527477556	0.240061874
+N9	313.6597295	0.059125876	0.905741029	0.063487584	0.030771387	0.094258971	0	0.141388457	0
+N28	296.7651694	0.065617731	0.370718647	0.357028969	0.272252384	0.629281353	0	0.943922029	0
+N11	317	0.068546751	0.568877122	0.249146426	0.181976452	0.431122878	0	0.646684317	0
+N19	322.4804482	0.069460694	0.551190236	0.258267813	0.190541951	0.448809764	0	0.673214646	0
+N47	292.1867106	0.074841718	0.36514881	0.358944441	0.275906749	0.63485119	0	0.952276785	0
+N27	314.1553997	0.084005728	0.653410653	0.201990884	0.144598463	0.346589347	0	0.519884021	0
+N31	299.84699	0.129071281	0.409524336	0.261561221	0.328914443	0.590475664	0	0.885713497	0
+N35	299.9419297	0.138890764	0.356586114	0.355978914	0.287434972	0.643413886	0	0.96512083	0
+N33	292.6781059	0.139243721	0.409266799	0.328580904	0.262152296	0.590733201	0	0.886099801	0
+N39	296.9971527	0.146496317	0.407449556	0.328703869	0.263846575	0.592550444	0	0.888825667	0
+N23	252.3861759	0.184517438	0.561948466	0.246667298	0.191384237	0.438051534	0	0.657077301	0
+N7	327.991453	0.239176181	0.918613637	0.031422559	0.049963804	0.081386363	0	0.122079545	0
+N16	312.5306241	0.254865504	0.639059438	0.199817425	0.161123136	0.360940562	0	0.541410843	0
+N41	291.8419222	0.268201813	0.349449575	0.351412942	0.299137483	0.650550425	0	0.975825638	0
+N24	321.6319279	0.283440364	0.743591448	0.113061562	0.14334699	0.256408552	0	0.384612828	0
+N5	316.8366294	0.286421377	0.563588536	0.198424213	0.237987251	0.436411464	0	0.654617196	0
+N42	292.364456	0.291019494	0.386597999	0.282518674	0.330883326	0.613402001	0	0.920103001	0
+N25	302.6873197	0.297002185	0.604861221	0.216409506	0.178729274	0.395138779	0	0.592708169	0
+N4	288.3473684	0.322416502	0.967950121	0.010808876	0.021241003	0.032049879	0	0.048074818	0
+N40	321.340207	0.324500622	0.35631589	0.343890142	0.299793969	0.64368411	0	0.965526165	0
+N36	310.3701963	0.333029625	0.349108233	0.347611152	0.303280615	0.650891767	0	0.976337651	0
+N37	290.5885406	0.353443196	0.430006372	0.305545384	0.264448245	0.569993628	0	0.854990443	0
+N38	322.1698502	0.457845484	0.356848914	0.30499031	0.338160776	0.643151086	0	0.96472663	0
+N13	336.3614191	0.505803916	0.604115551	0.186528576	0.209355874	0.395884449	0	0.593826674	0
+N50	299.5325608	0.520138865	0.340909686	0.314461031	0.344629282	0.659090314	0	0.988635471	0
+N22	304.9553571	0.523370508	0.419483133	0.304179992	0.276336875	0.580516867	0	0.8707753	0
+N51	300.1438756	0.55699491	0.361986751	0.332545674	0.305467575	0.638013249	0	0.957019874	0
+N3	217	0.563702862	0.986175115	0.00921659	0.004608295	0.013824885	0	0.020737327	0
+N30	325.8012933	0.565197736	0.407908174	0.308305066	0.28378676	0.592091826	0	0.88813774	0
+N8	331.9087725	0.613020491	0.917864929	0.04504563	0.037089441	0.082135071	0	0.123202607	0
+N32	314.9407445	0.62774576	0.358217662	0.309946477	0.331835862	0.641782338	0	0.962673508	0
+N21	320.5459156	0.639579802	0.630049894	0.192929463	0.177020643	0.369950106	0	0.554925159	0
+N18	309.8939059	0.640841216	0.872159878	0.068657788	0.059182333	0.127840122	0	0.191760182	0
+N45	297.9967508	0.655030493	0.341032781	0.318978648	0.339988571	0.658967219	0	0.988450828	0
+N34	322.3500163	0.691762013	0.41718108	0.299838495	0.282980425	0.58281892	0	0.87422838	0
+N44	289.271355	0.721193414	0.386049199	0.31519569	0.29875511	0.613950801	0	0.920926201	0
+N43	284.2032686	0.730446882	0.357835202	0.329270953	0.312893845	0.642164798	0	0.963247197	0
+N49	302.1250716	0.736654187	0.389537941	0.312789196	0.297672862	0.610462059	0	0.915693088	0
+N20	319.3317973	0.788568826	0.524947279	0.232354709	0.242698012	0.475052721	0	0.712579081	0
+N15	327.7759501	0.803977169	0.361290855	0.324832805	0.31387634	0.638709145	0	0.958063717	0
+N46	290.6074881	0.820136918	0.357595474	0.315857211	0.326547315	0.642404526	0	0.963606788	0
+N26	317.0527624	0.833009873	0.35129965	0.319581637	0.329118713	0.64870035	0	0.973050525	0
+N10	337.881862	0.837515287	0.871419222	0.062290143	0.066290636	0.128580778	0	0.192871168	0
+N12	308.719697	0.864152358	0.53249461	0.237081649	0.230423741	0.46750539	0	0.701258085	0
+N29	310.2405558	0.88951371	0.339098713	0.327244726	0.333656562	0.660901287	0	0.991351931	0
+N14	326.6843662	0.937856299	0.394707108	0.300968471	0.304324421	0.605292892	0	0.907939338	0
+N52	298.2863857	0.969428194	0.356483041	0.322648542	0.320868417	0.643516959	0	0.965275438	0
+```
+
+# Conclusion
+
+Phytop's χ² test framework transforms ASTRAL's quartet support statistics into a powerful tool for evolutionary inference. By testing the symmetry of alternative topology frequencies, it efficiently distinguishes between coalescent stochasticity (ILS) and reticulate evolution (hybridization) without requiring additional computational analysis of gene trees. This approach demonstrates how existing phylogenomic outputs can be repurposed for novel evolutionary insights through appropriate statistical frameworks, providing researchers with an accessible and efficient method for detecting and quantifying evolutionary conflict in large-scale phylogenomic datasets.
+
+---
+
+# References
+
